@@ -4,6 +4,7 @@
 node index.js [target URL] [*throttle in milliseconds]
 **/
 
+const async = require('async');
 const req = require('request');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
@@ -33,18 +34,62 @@ var finishTimeout;
 
 // TODO: this is only for test: remove it later ////////
 var startTime = Date.now();
-start(function () {}, function () {
+startSync(function () {}, function () {
 	console.log('[DONE]');
 	console.log('Time in milliseconds:', Date.now() - startTime);
-	console.log('Collected URLs:', search.getNumberOfUrls());
+	console.log('Searched URLs:', search.getNumberOfUrls());
 	console.log('Error URLs:', search.getNumberOfErrors());
+	console.log(
+		'Collected URLs:',
+		search.getNumberOfUrls() -
+			(search.getNumberOfErrors().errors +
+				search.getNumberOfErrors().badUrls +
+					search.getNumberOfErrors().misc)
+	);
 	process.exit(0);
 });
 ////////////////////////////////////////////////////////
 
 module.exports = {
+	startSync: startSync,
 	start: start
 };
+
+function startSync(each, done) {
+	_startSync(url, each, done);
+}
+
+function _startSync(_url, each, done) {
+	search.run(_url, { throttle: throttle }, function (error, __url, body) {
+
+		if (error) {
+			console.error(error);
+			process.exit(1);
+			return;
+		}
+	
+		// if _url is null, it means the body is empty
+		if (__url) {
+			// parse body on each(...)
+			each(__url, body);
+		}
+
+		var links = extract.getLinks(body, protocol, domainName, false);
+	
+		if (__url) {	
+			console.log(__url);
+		}
+
+		if (!links.length) {
+			done();
+			return;
+		}
+
+		async.forEachSeries(links, function (link, next) {
+			_startSync(link, each, next);
+		}, done);
+	});
+}
 
 function start(each, done) {
 	_search(url, each, done);
