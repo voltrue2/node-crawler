@@ -1,7 +1,7 @@
 'use strict';
 
 /***
-node index.js [target URL] [*throttle in milliseconds] [*encoding]
+node index.js [target URL] [*encoding] [*limit]
 **/
 
 const async = require('async');
@@ -9,11 +9,9 @@ const req = require('request');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
 
-const FINISH_TIMEOUT = 10000;
-
 var url = process.argv[2];
-var throttle = process.argv[3] ? parseInt(process.argv[3]) : 0;
-var encoding = process.argv[4] || 'UTF-8';
+var encoding = process.argv[3] || 'UTF-8';
+var limit = process.argv[4] || 0;
 
 if (!url) {
 	console.error('missing URL');
@@ -31,7 +29,9 @@ var domainName = url.replace(protocol + '://', '');
 var index = domainName.indexOf('/') === -1 ? domainName.length : domainName.indexOf('/');
 domainName = domainName.substring(0, index);
 
-var finishTimeout;
+var opts = {
+	encoding: encoding
+};
 
 // TODO: this is only for test: remove it later ////////
 var startTime = Date.now();
@@ -61,7 +61,7 @@ function startSync(each, done) {
 }
 
 function _startSync(_url, each, done) {
-	search.run(_url, { throttle: throttle, encoding: encoding }, function (error, __url, body) {
+	search.run(_url, opts, function (error, __url, body) {
 
 		if (error) {
 			console.error(error);
@@ -76,19 +76,32 @@ function _startSync(_url, each, done) {
 		}
 
 		var links = extract.getLinks(body, protocol, domainName, false);
-	
-		if (__url) {	
-			console.log(links.length + '    ' + __url);
-		}
 
 		if (!links.length) {
 			done();
 			return;
 		}
 
-		async.forEachSeries(links, function (link, next) {
-			console.log(link);
-			_startSync(link, each, next);
+		if (limit && limit < links.length) {
+			var res = [];
+			var tmp = [];
+			for (var i = 0, len = links.length; i < len; i++) {
+				tmp.push(links[i]);
+				if (i % limit) {
+					res.push(tmp);
+					tmp = [];
+					continue;			
+				}
+			}
+			links = res;
+		} else {
+			links = [ links ];
+		}
+
+		async.forEachSeries(links, function (items, next) {
+			async.forEach(items, function (link, moveon) {
+				_startSync(link, each, moveon);
+			}, next);
 		}, done);
 	});
 }
@@ -105,7 +118,7 @@ function _search(url, each, done) {
 			done();
 		}
 	};
-	search.run(url, { throttle: throttle, encoding: encoding }, function (error, _url, body) {
+	search.run(url, opts, function (error, _url, body) {
 
 		if (error) {
 			console.error(error);
@@ -122,10 +135,6 @@ function _search(url, each, done) {
 		var links = extract.getLinks(body, protocol, domainName, false);
 		
 		pending += links.length;
-	
-		if (_url) {	
-			console.log(pending + '    ' + _url);
-		}
 
 		if (!pending) {
 			done();
