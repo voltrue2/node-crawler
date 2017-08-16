@@ -95,7 +95,7 @@ function startSync(each, done) {
 }
 
 function _startSync(_url, each, done) {
-	search.run(_url, opts, function (error, __url, body) {
+	var _callback = function (error, __url, body) {
 
 		if (error) {
 			return;
@@ -143,6 +143,12 @@ function _startSync(_url, each, done) {
 				_startSync(link, each, moveon);
 			}, next);
 		}, done);
+	};
+	
+	search.run(_url, opts, function (error, __url, body) {
+		process.nextTick(function () {
+			_callback(error, __url, body);
+		});
 	});
 }
 
