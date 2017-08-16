@@ -9,6 +9,31 @@ const req = require('request');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
 
+/**
+* Help:
+node index.js --help
+node index.js -h
+*/
+if (process.argv[2] === '--help' || process.argv[2] === '-h') {
+	console.log('');
+	console.log('Command options: Options must follow the following order');
+	console.log('[target URL] [*encoding] [*limit] [*throttle]');
+	console.log('*********************************************');
+	console.log('[target URL]	The starting URL to start crawling');
+	console.log('[*encoding]	Optional encoding of the crawled content: UTF-8, EUC-JP, Shift_JS etc.');
+	console.log('[*limit]	Optional integer to limit the number of parallel URL access');
+	console.log('[*throttle]	Optional milliseconds to regulate the URL access');
+	console.log('*********************************************');
+	console.log('Example:	https:/nodejs.org UTF-8 10 500');
+	console.log('Above options would mean:',
+		'Starts crawling from https://nodejs.org,',
+		'decode the content as UTF-8,',
+		'access upto 10 URLs at a time,',
+		'and wait 500 milliseconds to access each URL.');
+	console.log('');
+	process.exit(0);
+}
+
 var url = process.argv[2];
 var encoding = process.argv[3] || 'UTF-8';
 var limit = process.argv[4] || 0;
