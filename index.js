@@ -65,17 +65,10 @@ var opts = {
 // TODO: this is only for test: remove it later ////////
 var startTime = Date.now();
 startSync(function () {}, function () {
-	console.log('[DONE]');
-	console.log('Time in milliseconds:', Date.now() - startTime);
-	console.log('Searched URLs:', search.getNumberOfUrls());
-	console.log('Error URLs:', search.getNumberOfErrors());
-	console.log(
-		'Collected URLs:',
-		search.getNumberOfUrls() -
-			(search.getNumberOfErrors().errors +
-				search.getNumberOfErrors().badUrls +
-					search.getNumberOfErrors().misc)
-	);
+	var badUrls = search.getBadUrls();
+	for (var i = 0, len = Math.min(10, badUrls.length); i< len; i++) {
+		console.log('Bad URL:', badUrls[i]);
+	}
 	process.exit(0);
 });
 ////////////////////////////////////////////////////////
@@ -85,15 +78,26 @@ module.exports = {
 };
 
 function startSync(each, done) {
-	_startSync(url, each, done);
+	_startSync(url, each, function () {
+		console.log('[DONE]');
+		console.log('Time in milliseconds:', Date.now() - startTime);
+		console.log('Searched URLs:', search.getNumberOfUrls());
+		console.log('Error URLs:', search.getNumberOfErrors());
+		console.log(
+			'Collected URLs:',
+			search.getNumberOfUrls() -
+				(search.getNumberOfErrors().errors +
+					search.getNumberOfErrors().badUrls +
+						search.getNumberOfErrors().misc)
+		);
+		done();	
+	});
 }
 
 function _startSync(_url, each, done) {
 	search.run(_url, opts, function (error, __url, body) {
 
 		if (error) {
-			console.error(error);
-			process.exit(1);
 			return;
 		}
 	
@@ -127,11 +131,13 @@ function _startSync(_url, each, done) {
 		}
 
 		async.forEachSeries(links, function (items, next) {
+			var counter = 0;
 			async.forEach(items, function (link, moveon) {
 				if (throttle) {
+					counter += 1;
 					setTimeout(function () {
 						_startSync(link, each, moveon);
-					}, throttle);
+					}, throttle * counter);
 					return;
 				}
 				_startSync(link, each, moveon);
