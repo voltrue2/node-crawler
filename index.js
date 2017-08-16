@@ -4,8 +4,8 @@
 node index.js [target URL] [*encoding] [*limit] [*throttle]
 **/
 
-const async = require('async');
 const req = require('request');
+const async = require('./lib/async');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
 
@@ -96,7 +96,6 @@ function startSync(each, done) {
 
 function _startSync(_url, each, done) {
 	var _callback = function (error, __url, body) {
-
 		if (error) {
 			return;
 		}
@@ -140,15 +139,13 @@ function _startSync(_url, each, done) {
 					}, throttle * counter);
 					return;
 				}
-				_startSync(link, each, moveon);
+				process.nextTick(function () {
+					_startSync(link, each, moveon);
+				});
 			}, next);
 		}, done);
 	};
 	
-	search.run(_url, opts, function (error, __url, body) {
-		process.nextTick(function () {
-			_callback(error, __url, body);
-		});
-	});
+	search.run(_url, opts, _callback);
 }
 

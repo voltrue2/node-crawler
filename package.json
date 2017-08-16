@@ -5,7 +5,6 @@
 	"version": "0.0.1",
 	"dependencies": {
 		"request": "2.81.0",
-		"async": "2.5.0",
 		"iconv-lite": "0.4.18"
 	}
 }
