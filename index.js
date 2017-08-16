@@ -1,7 +1,7 @@
 'use strict';
 
 /***
-node index.js [target URL] [*throttle in milliseconds]
+node index.js [target URL] [*throttle in milliseconds] [*encoding]
 **/
 
 const async = require('async');
@@ -13,6 +13,7 @@ const FINISH_TIMEOUT = 10000;
 
 var url = process.argv[2];
 var throttle = process.argv[3] ? parseInt(process.argv[3]) : 0;
+var encoding = process.argv[4] || 'UTF-8';
 
 if (!url) {
 	console.error('missing URL');
@@ -60,7 +61,7 @@ function startSync(each, done) {
 }
 
 function _startSync(_url, each, done) {
-	search.run(_url, { throttle: throttle }, function (error, __url, body) {
+	search.run(_url, { throttle: throttle, encoding: encoding }, function (error, __url, body) {
 
 		if (error) {
 			console.error(error);
@@ -77,7 +78,7 @@ function _startSync(_url, each, done) {
 		var links = extract.getLinks(body, protocol, domainName, false);
 	
 		if (__url) {	
-			console.log(__url);
+			console.log(links.length + '    ' + __url);
 		}
 
 		if (!links.length) {
@@ -86,6 +87,7 @@ function _startSync(_url, each, done) {
 		}
 
 		async.forEachSeries(links, function (link, next) {
+			console.log(link);
 			_startSync(link, each, next);
 		}, done);
 	});
@@ -103,7 +105,7 @@ function _search(url, each, done) {
 			done();
 		}
 	};
-	search.run(url, { throttle: throttle }, function (error, _url, body) {
+	search.run(url, { throttle: throttle, encoding: encoding }, function (error, _url, body) {
 
 		if (error) {
 			console.error(error);
