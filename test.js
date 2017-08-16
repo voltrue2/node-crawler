@@ -9,6 +9,9 @@ const params = {
 };
 
 req(params, function (error, res, body) {
+	if (error) {
+		return console.error(error);
+	}
 	//var data = iconv.decode(body, 'Shift_JIS');
 	var data = iconv.decode(body, 'EUC-JP');
 	console.log(data);

@@ -1,7 +1,7 @@
 'use strict';
 
 /***
-node index.js [target URL] [*encoding] [*limit]
+node index.js [target URL] [*encoding] [*limit] [*throttle]
 **/
 
 const async = require('async');
@@ -12,6 +12,7 @@ const search = require('./lib/search');
 var url = process.argv[2];
 var encoding = process.argv[3] || 'UTF-8';
 var limit = process.argv[4] || 0;
+var throttle = process.argv[5] || 0;
 
 if (!url) {
 	console.error('missing URL');
@@ -24,6 +25,9 @@ if (!protocol) {
 	console.error('missing protocol');
 	process.exit(1);
 }
+
+limit = parseInt(limit);
+throttle = parseInt(throttle);
 
 var domainName = url.replace(protocol + '://', '');
 var index = domainName.indexOf('/') === -1 ? domainName.length : domainName.indexOf('/');
@@ -52,8 +56,7 @@ startSync(function () {}, function () {
 ////////////////////////////////////////////////////////
 
 module.exports = {
-	startSync: startSync,
-	start: start
+	start: startSync,
 };
 
 function startSync(each, done) {
@@ -76,7 +79,7 @@ function _startSync(_url, each, done) {
 		}
 
 		var links = extract.getLinks(body, protocol, domainName, false);
-
+		
 		if (!links.length) {
 			done();
 			return;
@@ -87,7 +90,7 @@ function _startSync(_url, each, done) {
 			var tmp = [];
 			for (var i = 0, len = links.length; i < len; i++) {
 				tmp.push(links[i]);
-				if (i % limit) {
+				if (i % limit === 0) {
 					res.push(tmp);
 					tmp = [];
 					continue;			
@@ -100,50 +103,15 @@ function _startSync(_url, each, done) {
 
 		async.forEachSeries(links, function (items, next) {
 			async.forEach(items, function (link, moveon) {
+				if (throttle) {
+					setTimeout(function () {
+						_startSync(link, each, moveon);
+					}, throttle);
+					return;
+				}
 				_startSync(link, each, moveon);
 			}, next);
 		}, done);
-	});
-}
-
-function start(each, done) {
-	_search(url, each, done);
-}
-
-function _search(url, each, done) {
-	var pending = 0;
-	var _searchChild = function () {
-		pending -= 1;
-		if (!pending) {
-			done();
-		}
-	};
-	search.run(url, opts, function (error, _url, body) {
-
-		if (error) {
-			console.error(error);
-			process.exit(1);
-			return;
-		}
-	
-		// if _url is null, it means the body is empty
-		if (_url) {
-			// parse body on each(...)
-			each(_url, body);
-		}
-
-		var links = extract.getLinks(body, protocol, domainName, false);
-		
-		pending += links.length;
-
-		if (!pending) {
-			done();
-			return;
-		}
-
-		for (var i = 0, len = links.length; i < len; i++) {
-			_search(links[i], each, _searchChild);
-		}
 	});
 }
 
