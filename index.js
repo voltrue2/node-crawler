@@ -8,7 +8,6 @@ const req = require('request');
 const async = require('./lib/async');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
-const spinner = require('./lib/spinner');
 
 /**
 * Help:
@@ -102,9 +101,6 @@ function startSync(each, done) {
 
 function _startSync(_url, each, done) {
 	var _callback = function (error, __url, body) {
-
-		spinner.stop();
-
 		if (error) {
 			return;
 		}
@@ -150,8 +146,6 @@ function _startSync(_url, each, done) {
 			}, next);
 		}, done);
 	};
-
-	spinner.start();
 	
 	search.run(_url, opts, _callback);
 }
