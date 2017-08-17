@@ -8,6 +8,7 @@ const req = require('request');
 const async = require('./lib/async');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
+const spinner = require('./lib/spinner');
 
 /**
 * Help:
@@ -36,7 +37,7 @@ if (process.argv[2] === '--help' || process.argv[2] === '-h') {
 
 var url = process.argv[2];
 var encoding = process.argv[3] || 'UTF-8';
-var limit = process.argv[4] || 0;
+var limit = process.argv[4] || 1;
 var throttle = process.argv[5] || 0;
 
 if (!url) {
@@ -53,6 +54,11 @@ if (!protocol) {
 
 limit = parseInt(limit);
 throttle = parseInt(throttle);
+
+// limit must not be smaller than 1
+if (limit < 1) {
+	limit = 1;
+}
 
 var domainName = url.replace(protocol + '://', '');
 var index = domainName.indexOf('/') === -1 ? domainName.length : domainName.indexOf('/');
@@ -96,6 +102,9 @@ function startSync(each, done) {
 
 function _startSync(_url, each, done) {
 	var _callback = function (error, __url, body) {
+
+		spinner.stop();
+
 		if (error) {
 			return;
 		}
@@ -113,28 +122,25 @@ function _startSync(_url, each, done) {
 			return;
 		}
 
-		if (limit && limit < links.length) {
-			var res = [];
-			var tmp = [];
-			for (var i = 0, len = links.length; i < len; i++) {
-				tmp.push(links[i]);
-				if (i % limit === 0) {
-					res.push(tmp);
-					tmp = [];
-					continue;			
-				}
+		var list = [];
+		var index = 0;
+		for (var i = 0, len = links.length; i < len; i++) {
+			if (i > 0 && i % limit === 0) {
+				index += 1;
 			}
-			links = res;
-		} else {
-			links = [ links ];
+			if (!list[index]) {
+				list[index] = [];
+			}
+			list[index].push(links[i]);
 		}
 
-		async.forEachSeries(links, function (items, next) {
+		async.forEachSeries(list, function (items, next) {
 			var counter = 0;
 			async.forEach(items, function (link, moveon) {
 				if (throttle) {
 					counter += 1;
 					setTimeout(function () {
+						spinner.start();
 						_startSync(link, each, moveon);
 					}, throttle * counter);
 					return;
@@ -145,6 +151,8 @@ function _startSync(_url, each, done) {
 			}, next);
 		}, done);
 	};
+
+	spinner.start();
 	
 	search.run(_url, opts, _callback);
 }
