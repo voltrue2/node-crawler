@@ -140,7 +140,6 @@ function _startSync(_url, each, done) {
 				if (throttle) {
 					counter += 1;
 					setTimeout(function () {
-						spinner.start();
 						_startSync(link, each, moveon);
 					}, throttle * counter);
 					return;
