@@ -1,10 +1,11 @@
 'use strict';
 
 /***
-node index.js [target URL] [*encoding] [*limit] [*throttle]
+node index.js [target URL] [*encoding] [*limit] [*throttle] [*log path]
 **/
 
 const req = require('request');
+const logger = require('./lib/logger');
 const async = require('./lib/async');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
@@ -38,6 +39,7 @@ var url = process.argv[2];
 var encoding = process.argv[3] || 'UTF-8';
 var limit = process.argv[4] || 1;
 var throttle = process.argv[5] || 0;
+var logpath = process.argv[6] || null;
 
 if (!url) {
 	console.error('missing URL');
@@ -72,9 +74,12 @@ var startTime = Date.now();
 startSync(function () {}, function () {
 	var badUrls = search.getBadUrls();
 	for (var i = 0, len = Math.min(10, badUrls.length); i< len; i++) {
-		console.log('Bad URL:', badUrls[i]);
+		logger.write('Bad URL: ' + badUrls[i]);
 	}
-	process.exit(0);
+	// we want to make sure logger writes everything before we go...
+	setTimeout(function () {
+		process.exit(0);
+	}, 10000);
 });
 ////////////////////////////////////////////////////////
 
@@ -83,18 +88,19 @@ module.exports = {
 };
 
 function startSync(each, done) {
+	logger.setPath(logpath);
 	_startSync(url, each, function () {
-		console.log('[DONE]');
-		console.log('Time in milliseconds:', Date.now() - startTime);
-		console.log('Searched URLs:', search.getNumberOfUrls());
-		console.log('Error URLs:', search.getNumberOfErrors());
-		console.log(
-			'Collected URLs:',
+		logger.write('[DONE]');
+		logger.write('Time in milliseconds:' + (Date.now() - startTime));
+		logger.write('Searched URLs:' + (search.getNumberOfUrls()));
+		logger.write('Error URLs:' + (search.getNumberOfErrors()));
+		logger.write(
+			'Collected URLs: ' + (
 			search.getNumberOfUrls() -
 				(search.getNumberOfErrors().errors +
 					search.getNumberOfErrors().badUrls +
 						search.getNumberOfErrors().misc)
-		);
+		));
 		done();	
 	});
 }
