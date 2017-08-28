@@ -24,6 +24,7 @@ if (process.argv[2] === '--help' || process.argv[2] === '-h') {
 	console.log('[*encoding]	Optional encoding of the crawled content: UTF-8, EUC-JP, Shift_JS etc.');
 	console.log('[*limit]	Optional integer to limit the number of parallel URL access');
 	console.log('[*throttle]	Optional milliseconds to regulate the URL access');
+	console.log('[*log path]	Optional absolut path for log output to a file');
 	console.log('*********************************************');
 	console.log('Example:	https:/nodejs.org UTF-8 10 500');
 	console.log('Above options would mean:',
