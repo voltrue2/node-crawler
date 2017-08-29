@@ -90,11 +90,14 @@ module.exports = {
 
 function startSync(each, done) {
 	logger.setPath(logpath);
-	_startSync(url, each, function () {
+	_startSync(url, each, function (error, _url) {
+		if (error) {
+			logger.write('Error [' + _url + ']: ' + error.message);
+		}
 		logger.write('[DONE]');
 		logger.write('Time in milliseconds:' + (Date.now() - startTime));
-		logger.write('Searched URLs:' + (search.getNumberOfUrls()));
-		logger.write('Error URLs:' + (search.getNumberOfErrors()));
+		logger.write('Searched URLs:' + (search.getNumberOfUrls().join('\n')));
+		logger.write('Error URLs:' + (search.getNumberOfErrors().join('\n')));
 		logger.write(
 			'Collected URLs: ' + (
 			search.getNumberOfUrls() -
@@ -109,6 +112,7 @@ function startSync(each, done) {
 function _startSync(_url, each, done) {
 	var _callback = function (error, __url, body) {
 		if (error) {
+			done(error, __url);
 			return;
 		}
 	
@@ -121,7 +125,7 @@ function _startSync(_url, each, done) {
 		var links = extract.getLinks(body, protocol, domainName, false);
 		
 		if (!links.length) {
-			done();
+			done(null, __url);
 			return;
 		}
 
