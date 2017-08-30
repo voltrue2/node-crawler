@@ -96,8 +96,8 @@ function startSync(each, done) {
 		}
 		logger.write('[DONE]');
 		logger.write('Time in milliseconds:' + (Date.now() - startTime));
-		logger.write('Searched URLs:' + (search.getNumberOfUrls().join('\n')));
-		logger.write('Error URLs:' + (search.getNumberOfErrors().join('\n')));
+		logger.write('Searched URLs:' + search.getNumberOfUrls());
+		logger.write('Error URLs:' + JSON.stringify(search.getNumberOfErrors(), null, 2));
 		logger.write(
 			'Collected URLs: ' + (
 			search.getNumberOfUrls() -
