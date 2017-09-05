@@ -70,18 +70,31 @@ var opts = {
 	encoding: encoding
 };
 
-// TODO: this is only for test: remove it later ////////
-var startTime = Date.now();
-startSync(function () {}, function () {
+process.on('uncaughtException', function (exception) {
+	logger.write('Exception: ' + error.message + '\n' + error.stack);
+});
+
+process.on('exit', function () {
+	logger.write('[DONE]');
+	logger.write('Time in milliseconds:' + (Date.now() - startTime));
+	logger.write('Searched URLs:' + search.getNumberOfUrls());
+	logger.write('Error URLs:' + JSON.stringify(search.getNumberOfErrors(), null, 2));
+	logger.write(
+		'Collected URLs: ' + (
+		search.getNumberOfUrls() -
+			(search.getNumberOfErrors().errors +
+				search.getNumberOfErrors().badUrls +
+					search.getNumberOfErrors().misc)
+	));
 	var badUrls = search.getBadUrls();
 	for (var i = 0, len = Math.min(10, badUrls.length); i< len; i++) {
 		logger.write('Bad URL: ' + badUrls[i]);
 	}
-	// we want to make sure logger writes everything before we go...
-	setTimeout(function () {
-		process.exit(0);
-	}, 10000);
 });
+
+// TODO: this is only for test: remove it later ////////
+var startTime = Date.now();
+startSync(function () {}, function () {});
 ////////////////////////////////////////////////////////
 
 module.exports = {
@@ -90,23 +103,8 @@ module.exports = {
 
 function startSync(each, done) {
 	logger.setPath(logpath);
-	_startSync(url, each, function (error, _url) {
-		if (error) {
-			logger.write('Error [' + _url + ']: ' + error.message);
-		}
-		logger.write('[DONE]');
-		logger.write('Time in milliseconds:' + (Date.now() - startTime));
-		logger.write('Searched URLs:' + search.getNumberOfUrls());
-		logger.write('Error URLs:' + JSON.stringify(search.getNumberOfErrors(), null, 2));
-		logger.write(
-			'Collected URLs: ' + (
-			search.getNumberOfUrls() -
-				(search.getNumberOfErrors().errors +
-					search.getNumberOfErrors().badUrls +
-						search.getNumberOfErrors().misc)
-		));
-		done();	
-	});
+	// url is set once on the start of the process from the argument
+	_startSync(url, each, done);
 }
 
 function _startSync(_url, each, done) {
