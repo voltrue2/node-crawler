@@ -9,6 +9,7 @@ const logger = require('./lib/logger');
 const async = require('./lib/async');
 const extract = require('./lib/extract');
 const search = require('./lib/search');
+const mainloop = require('./lib/mainloop');
 
 /**
 * Help:
@@ -70,7 +71,7 @@ var opts = {
 	encoding: encoding
 };
 
-process.on('uncaughtException', function (exception) {
+process.on('uncaughtException', function (error) {
 	logger.write('Exception: ' + error.message + '\n' + error.stack);
 });
 
@@ -91,6 +92,9 @@ process.on('exit', function () {
 		logger.write('Bad URL: ' + badUrls[i]);
 	}
 });
+	
+// start main loop
+mainloop.start();
 
 // TODO: this is only for test: remove it later ////////
 var startTime = Date.now();
@@ -102,6 +106,7 @@ module.exports = {
 };
 
 function startSync(each, done) {
+	// set logging file path
 	logger.setPath(logpath);
 	// url is set once on the start of the process from the argument
 	_startSync(url, each, done);
