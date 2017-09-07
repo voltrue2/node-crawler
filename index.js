@@ -4,7 +4,7 @@
 node index.js [target URL] [*encoding] [*limit] [*throttle] [*log path]
 **/
 
-const req = require('request');
+const JsDom = require('jsdom').JSDOM;
 const logger = require('./lib/logger');
 const async = require('./lib/async');
 const extract = require('./lib/extract');
@@ -115,60 +115,68 @@ function startSync(each, done) {
 }
 
 function _startSync(_url, each, done) {
-	var _callback = function (error, __url, body) {
-		if (error) {
-			done(error, __url);
-			return;
-		}
 	
-		// if _url is null, it means the body is empty
-		if (__url) {
-			// parse body on each(...)
-			each(__url, body);
-		}
-
-		var links = extract.getLinks(body, protocol, domainName, false);
-
-		links = links.concat(search.getRetries());
-		
-		if (!links.length) {
-			done(null, __url);
-			return;
-		}
-
-		var list = [];
-		var index = 0;
-		for (var i = 0, len = links.length; i < len; i++) {
-			if (i > 0 && i % limit === 0) {
-				index += 1;
-			}
-			if (!list[index]) {
-				list[index] = [];
-			}
-			list[index].push(links[i]);
-		}
-		
-		_search(list, each, done);
-	};
-	
-	search.run(_url, opts, _callback);
+	search.run(_url, opts, _onRun.bind({ each: each, done: done }));
 }
 
+function _onRun(error, __url, body) {
+	var each = this.each;
+	var done = this.done;	
+
+	if (error) {
+		done(error, __url);
+		return;
+	}
+
+	// if _url is null, it means the body is empty
+	if (__url) {
+		// parse body on each(...)
+		each(__url, new JsDom(body), body);
+	}
+
+	var links = extract.getLinks(body, protocol, domainName, false);
+
+	links = links.concat(search.getRetries());
+	
+	if (!links.length) {
+		done(null, __url);
+		return;
+	}
+
+	var list = [];
+	var index = 0;
+	for (var i = 0, len = links.length; i < len; i++) {
+		if (i > 0 && i % limit === 0) {
+			index += 1;
+		}
+		if (!list[index]) {
+			list[index] = [];
+		}
+		list[index].push(links[i]);
+	}
+	
+	_search(list, each, done);
+};
+
 function _search(list, each, done) {
-	async.forEachSeries(list, function (items, next) {
-		var counter = 0;
-		async.forEach(items, function (link, moveon) {
-			if (throttle) {
-				counter += 1;
-				setTimeout(function () {
-					_startSync(link, each, moveon);
-				}, throttle * counter);
-				return;
-			}
-			process.nextTick(function () {
+	var params = { each: each };
+	async.forEachSeries(list, _onSearchSeries.bind(params), done);
+}
+
+function _onSearchSeries(item, next) {
+	var each = this.each;
+	var counter = 0;
+	async.forEach(item, function (link, moveon) {
+		if (throttle) {
+			counter += 1;
+			setTimeout(function () {
 				_startSync(link, each, moveon);
-			});
-		}, next);
-	}, done);
+			}, throttle * counter);
+			return;
+		}
+		process.nextTick(function () {
+			_startSync(link, each, moveon);
+		});
+	}, next);
 }
 
