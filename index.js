@@ -126,6 +126,8 @@ function _startSync(_url, each, done) {
 		}
 
 		var links = extract.getLinks(body, protocol, domainName, false);
+
+		links = links.concat(search.getRetries());
 		
 		if (!links.length) {
 			done(null, __url);
