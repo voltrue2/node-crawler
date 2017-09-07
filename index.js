@@ -106,10 +106,12 @@ module.exports = {
 };
 
 function startSync(each, done) {
-	// set logging file path
-	logger.setPath(logpath);
-	// url is set once on the start of the process from the argument
-	_startSync(url, each, done);
+	search.onReady(function () {
+		// set logging file path
+		logger.setPath(logpath);
+		// url is set once on the start of the process from the argument
+		_startSync(url, each, done);
+	});
 }
 
 function _startSync(_url, each, done) {
@@ -145,24 +147,28 @@ function _startSync(_url, each, done) {
 			}
 			list[index].push(links[i]);
 		}
-
-		async.forEachSeries(list, function (items, next) {
-			var counter = 0;
-			async.forEach(items, function (link, moveon) {
-				if (throttle) {
-					counter += 1;
-					setTimeout(function () {
-						_startSync(link, each, moveon);
-					}, throttle * counter);
-					return;
-				}
-				process.nextTick(function () {
-					_startSync(link, each, moveon);
-				});
-			}, next);
-		}, done);
+		
+		_search(list, each, done);
 	};
 	
 	search.run(_url, opts, _callback);
+}
+
+function _search(list, each, done) {
+	async.forEachSeries(list, function (items, next) {
+		var counter = 0;
+		async.forEach(items, function (link, moveon) {
+			if (throttle) {
+				counter += 1;
+				setTimeout(function () {
+					_startSync(link, each, moveon);
+				}, throttle * counter);
+				return;
+			}
+			process.nextTick(function () {
+				_startSync(link, each, moveon);
+			});
+		}, next);
+	}, done);
 }
 
