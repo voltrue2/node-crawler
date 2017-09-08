@@ -48,10 +48,26 @@ search.start({
 
 search.get(startUrl);
 
+var _onData;
+
+module.exports = {
+	onData: onData
+};
+
+function onData(__onData) {
+	if (typeof __onData !== 'function') {
+		throw new Error('onData must be a function');
+	}
+	_onData = __onData;
+}
+
 function _onEachGet(url, dom, links) {
 	
 	if (dom) {
 		// TODO: parse dom here
+		if (_onData) {
+			_onData(url, dom);
+		}
 	}
 	// move on to more links
 	if (links) {
