@@ -27,6 +27,7 @@ var encoding = DEFAULT_ENCODING;
 var limit = 1;
 var rate = 100;
 var anchorUrl;
+var _onEachGet;
 
 module.exports = {
 	start: start,
@@ -53,7 +54,7 @@ function getErrors() {
 	return JSON.parse(JSON.stringify(errors));
 }
 
-function start(params) {
+function start(params, __onEachGet) {
 	if (params && params.encoding) {
 		encoding = params.encoding;
 	}
@@ -63,26 +64,24 @@ function start(params) {
 	if (params && params.rate) {
 		rate = params.rate;
 	}
+	_onEachGet = __onEachGet;
 	_dispatcher();
 }
 
-function get(url, cb) {
+function get(url) {
 
 	// never crawls outside of anchorUrl
 	if (!anchorUrl) {
 		anchorUrl = url;	
 	}
-
+	
 	if (seen.indexOf(url) > -1) {
-		return cb();
+		return;
 	}
 
 	seen.push(url);
 	
-	pending.push({
-		url: url,
-		cb: cb
-	});
+	pending.push(url);
 }
 
 function _dispatcher() {
@@ -94,9 +93,7 @@ function _onDispatched() {
 	setTimeout(_dispatcher, rate);
 }
 
-function _dispatch(item, next) {
-	var url = item.url;
-	var cb = item.cb;
+function _dispatch(url, next) {
 	var params = {
 		encoding: null, // we want body as binary
 		followRedirect: true,
@@ -107,7 +104,6 @@ function _dispatch(item, next) {
 	request(params, _onRequest.bind({
 		encoding: encoding,
 		url: url,
-		cb: cb,
 		next: next
 	}));
 }
@@ -115,7 +111,6 @@ function _dispatch(item, next) {
 function _onRequest(error, res, body) {
 	var encoding = this.encoding;
 	var url = this.url;
-	var cb = this.cb;
 	var next = this.next;
 
 	logger.write(
@@ -156,7 +151,7 @@ function _onRequest(error, res, body) {
 	var dom = new JsDom(body).window.document;
 	var links = _getLinks(url, body);
 	collected.push(url);
-	cb(url, dom, links, body);
+	_onEachGet(url, dom, links, body);
 	next();
 }
 

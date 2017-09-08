@@ -44,11 +44,11 @@ search.start({
 	limit: parseInt(limit),
 	rate: parseInt(rate),
 	encoding: encoding
-});
+}, _onEachGet);
 
-search.get(startUrl, _onGet);
+search.get(startUrl);
 
-function _onGet(url, dom, links) {
+function _onEachGet(url, dom, links) {
 	
 	if (dom) {
 		// TODO: parse dom here
@@ -56,7 +56,7 @@ function _onGet(url, dom, links) {
 	// move on to more links
 	if (links) {
 		for (var i = 0, len = links.length; i < len; i++) {
-			search.get(links[i], _onGet);
+			search.get(links[i]);
 		}
 	}
 }
