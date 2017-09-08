@@ -94,7 +94,7 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 				path = _createUrl(protocol, domainName, path);	
 			}
 		}
-		if (!allowCrossSite && domainName && path.indexOf(protocol + '://' + domainName) !== 0) {
+		if (!allowCrossSite && domainName && path.indexOf(protocol + domainName) !== 0) {
 			// the link leads to different domain
 			continue;
 		}
@@ -143,6 +143,6 @@ function _createUrl(protocol, domainName, path) {
 	if (domainName[domainName.length - 1] !== '/' && path[0] !== '/') {
 		domainName += '/';
 	}
-	return protocol + '://' + domainName + path;
+	return protocol +  domainName + path;
 }
 
