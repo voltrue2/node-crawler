@@ -33,7 +33,7 @@ module.exports = {
 	get: get,
 	isActive: isActive,
 	getSeenUrls: getSeenUrls,
-	getColectedUrls: getCollectedUrls,
+	getCollectedUrls: getCollectedUrls,
 	getErrors: getErrors
 };
 
