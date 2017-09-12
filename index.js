@@ -33,7 +33,7 @@ process.on('exit', function () {
 	logger.write('[DONE]');
 	logger.write('Time in milliseconds:' + (Date.now() - startTime));
 	logger.write('Searched URLs:' + search.getSeenUrls().length);
-	logger.write('Collected URLs:' + search.getCollectedUrls().length);
+	logger.write('Collected URLs:' + search.getCollectedUrls());
 	logger.write('Errors:' + JSON.stringify(search.getErrors(), null, 2));
 });
 

@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const request = require('request');
 const iconv = require('iconv-lite');
 const JsDom = require('jsdom').JSDOM;
@@ -18,7 +19,6 @@ const WLIST = [
 	'.rss'
 ];
 
-const collected = [];
 const seen = [];
 const pending = [];
 const errors = {};
@@ -28,6 +28,7 @@ var limit = 1;
 var rate = 100;
 var anchorUrl;
 var _onEachGet;
+var collected = 0;
 
 module.exports = {
 	start: start,
@@ -47,7 +48,7 @@ function getSeenUrls() {
 }
 
 function getCollectedUrls() {
-	return collected.concat([]);
+	return collected;
 }
 
 function getErrors() {
@@ -70,22 +71,36 @@ function start(params, __onEachGet) {
 
 function get(url) {
 
+	url = _enforceTrailingSlash(url);
+
 	// never crawls outside of anchorUrl
 	if (!anchorUrl) {
 		anchorUrl = url;	
 	}
+
+	var hash = _hash(url);
 	
-	if (seen.indexOf(url) > -1) {
+	if (seen.indexOf(hash) > -1) {
 		return;
 	}
-
-	seen.push(url);
 	
 	pending.push(url);
 }
 
 function _dispatcher() {
-	var list = pending.splice(0, limit);	
+	var list = [];
+	while (list.length < limit && pending.length) {
+		var url = pending.shift();
+		if (!url) {
+			break;
+		}
+		var hash = _hash(url);
+		if (seen.indexOf(hash) > -1) {
+			continue;
+		}
+		seen.push(hash);
+		list.push(url);
+	}
 	async.forEach(list, _dispatch, _onDispatched);
 }
 
@@ -115,9 +130,9 @@ function _onRequest(error, res, body) {
 
 	logger.write(
 		mark.get(error, res) + '  ' +
-		seen.length + '  ' +
 		pending.length + '  ' +
-		collected.length + '  ' +
+		seen.length + '  ' +
+		collected + '  ' +
 		url 
 	);
 	
@@ -150,7 +165,7 @@ function _onRequest(error, res, body) {
 	}
 	var dom = new JsDom(body).window.document;
 	var links = _getLinks(url, body);
-	collected.push(url);
+	collected += 1;
 	_onEachGet(url, dom, links, body);
 	next();
 }
@@ -159,9 +174,43 @@ function _getLinks(url, body) {
 	var protocol = anchorUrl.substring(0, anchorUrl.indexOf('://') + 3);
 	var domainName = anchorUrl.replace(protocol, '');
 	if (domainName.indexOf('/') > -1) {
-		domainName = substring(0, domainName.indexOf('/'));
+		domainName = domainName.substring(0, domainName.indexOf('/'));
 	}
 	var allowCrossSite = false;
-	return extract.getLinks(body, protocol, domainName, allowCrossSite);
+	var links = extract.getLinks(body, protocol, domainName, allowCrossSite);
+	var res = [];
+	// remove redundancies
+	for (var i = 0, len = links.length; i < len; i++) {
+		if (seen.indexOf(_hash(links[i])) > -1) {
+			continue;
+		}
+		res.push(links[i]);
+	}
+	return res;
+}
+
+function _enforceTrailingSlash(url) {
+	var hashIndex = url.indexOf('#');
+	var paramIndex = url.indexOf('?');
+	var index = paramIndex;
+	if (hashIndex > -1 && hashIndex < paramIndex) {
+		index = hashIndex;
+	}
+	if (index > -1) {
+		var suburl = url.substring(0, index);	
+		var params = url.substring(index);
+		if (suburl[suburl.length - 1] !== '/') {
+			suburl += '/';
+		}
+		return suburl + params;
+	}
+	if (url[url.length - 1] !== '/') {
+		url += '/';
+	}
+	return url;
+}
+
+function _hash(url) {
+	return crypto.createHash('md5').update(url).digest('base64');
 }
 
