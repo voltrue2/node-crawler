@@ -19,6 +19,7 @@ crawler.addIgnore('/photo');
 crawler.addIgnore('/documents');
 crawler.addIgnore('.xml');
 crawler.addIgnore('/charge');
+crawler.addIgnore('/check');
 
 crawler.onData(function (url, dom) {
 	// TODO: parse DOM here...
