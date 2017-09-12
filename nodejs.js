@@ -10,7 +10,7 @@ const crawler = require('./');
 const startUrl = 'https://nodejs.org/';
 const limit = 100;
 const rate = 100;
-const encoding = 'EUC-JP';
+const encoding = 'UTF-8';
 const logpath = process.argv[2] || null;
 
 if (logpath) {

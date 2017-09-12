@@ -207,12 +207,18 @@ function _enforceTrailingSlash(url) {
 	if (index > -1) {
 		var suburl = url.substring(0, index);	
 		var params = url.substring(index);
-		if (suburl[suburl.length - 1] !== '/') {
+		if (
+			WLIST.indexOf(suburl.substring(suburl.lastIndexOf('.'))) === -1 &&
+			suburl[suburl.length - 1] !== '/'
+		) {
 			suburl += '/';
 		}
 		return suburl + params;
 	}
-	if (url[url.length - 1] !== '/') {
+	if (
+		WLIST.indexOf(url.substring(url.lastIndexOf('.'))) === -1 &&
+		url[url.length - 1] !== '/'
+	) {
 		url += '/';
 	}
 	return url;
