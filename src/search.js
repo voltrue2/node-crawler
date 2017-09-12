@@ -3,7 +3,6 @@
 const crypto = require('crypto');
 const request = require('request');
 const iconv = require('iconv-lite');
-const JsDom = require('jsdom').JSDOM;
 const async = require('./async');
 const extract = require('./extract');
 const logger = require('./logger');
@@ -36,8 +35,18 @@ module.exports = {
 	isActive: isActive,
 	getSeenUrls: getSeenUrls,
 	getCollectedUrls: getCollectedUrls,
-	getErrors: getErrors
+	getErrors: getErrors,
+	addIgnore: addIgnore,
+	getIgnores: getIgnores
 };
+
+function addIgnore(urlFragment) {
+	extract.addIgnore(urlFragment);
+}
+
+function getIgnores() {
+	return extract.getIgnores();
+}
 
 function isActive() {
 	return pending.length > 0;
@@ -163,10 +172,9 @@ function _onRequest(error, res, body) {
 	} else {
 		body = body.toString();
 	}
-	var dom = new JsDom(body).window.document;
 	var links = _getLinks(url, body);
 	collected += 1;
-	_onEachGet(url, dom, links, body);
+	_onEachGet(url, body, links);
 	next();
 }
 

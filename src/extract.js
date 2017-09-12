@@ -62,10 +62,21 @@ const FILES = [
 	'.css',
 	'.js'
 ];
+const ignores = [];
 
 module.exports = {
+	addIgnore: addIgnore,
+	getIgnores: getIgnores,
 	getLinks: getLinks
 };
+
+function addIgnore(urlFragment) {
+	ignores.push(urlFragment);
+}
+
+function getIgnores() {
+	return ignores.concat([]);
+}
 
 function getLinks(_data, protocol, domainName, allowCrossSite) {
 	var data = _data.toLowerCase();
@@ -102,6 +113,10 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 		path = _removeHash(path);
 		// handle trailing slash
 		path = _handleTrailingSlash(path);
+		// check ignore
+		if (_isIgnore(path)) {
+			continue;
+		}
 		// ignore duplicates
 		if (res.indexOf(path) !== -1) {
 			continue;
@@ -109,6 +124,15 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 		res.push(path);
 	}
 	return res;
+}
+
+function _isIgnore(path) {
+	for (var i = 0, len = ignores.length; i < len; i++) {
+		if (path.indexOf(ignores[i]) > -1) {
+			return true;
+		}
+	}
+	return false;
 }
 
 function _removeHash(path) {

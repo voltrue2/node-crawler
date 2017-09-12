@@ -5,25 +5,12 @@
 * node index [URL] [*limit] [*rate] [*encoding] [*log path]
 */
 
+const JsDom = require('jsdom').JSDOM;
 const mainloop = require('./src/mainloop');
 const search = require('./src/search');
 const logger = require('./src/logger');
 
-const startUrl = process.argv[2];
-const limit = process.argv[3] || null;
-const rate = process.argv[4] || null;
-const encoding = process.argv[5] || null;
-const logpath = process.argv[6] || null;
 const startTime = Date.now();
-
-if (!startUrl) {
-	console.error('Missing URL: app [URL] [*limit] [*rate] [*encoding] [*log path]');
-	process.exit(1);
-}
-
-if (logpath) {
-	logger.setPath(logpath);
-}
 
 process.on('uncaughtException', function (error) {
 	logger.write('Exception: ' + error.message + '\n' + error.stack);
@@ -37,22 +24,37 @@ process.on('exit', function () {
 	logger.write('Errors:' + JSON.stringify(search.getErrors(), null, 2));
 });
 
-// start main loop
-mainloop.start();
-
-search.start({
-	limit: parseInt(limit),
-	rate: parseInt(rate),
-	encoding: encoding
-}, _onEachGet);
-
-search.get(startUrl);
-
 var _onData;
 
 module.exports = {
-	onData: onData
+	onData: onData,
+	addIgnore: addIgnore,
+	start: start
 };
+
+function addIgnore(path) {
+	search.addIgnore(path);
+}
+
+function start(startUrl, limit, rate, encoding, logpath) {
+	// set log path
+	if (logpath) {
+		logger.setPath(logpath);
+	}
+	var ignores = search.getIgnores();
+	for (var i = 0, len = ignores.length; i < len; i++) {
+		logger.write('Ignored URL fragment: ' + ignores[i]);
+	}
+	// start main loop
+	mainloop.start();
+	// start crawling
+	search.start({
+		limit: parseInt(limit),
+		rate: parseInt(rate),
+		encoding: encoding
+	}, _onEachGet);
+	search.get(startUrl);
+}
 
 function onData(__onData) {
 	if (typeof __onData !== 'function') {
@@ -61,13 +63,9 @@ function onData(__onData) {
 	_onData = __onData;
 }
 
-function _onEachGet(url, dom, links) {
-	
-	if (dom) {
-		// TODO: parse dom here
-		if (_onData) {
-			_onData(url, dom);
-		}
+function _onEachGet(url, body, links) {
+	if (_onData) {
+		_onData(url, new JsDom(body).window.document);
 	}
 	// move on to more links
 	if (links) {
