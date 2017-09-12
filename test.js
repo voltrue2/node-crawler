@@ -1,5 +1,6 @@
 'use strict';
 
+const cheerio = require('cheerio');
 const Jsdom = require('jsdom').JSDOM;
 const req = require('request');
 const iconv = require('iconv-lite');
@@ -14,11 +15,18 @@ req(params, function (error, res, body) {
 		return console.error(error);
 	}
 	var data = iconv.decode(body, 'EUC-JP');
-	//console.log(data);
+	// Jsdom
 	var dom = new Jsdom(data);
 	var doc = dom.window.document;
 	var list = doc.querySelectorAll('.l-footer-ekiten_link a');
 	for (var i = 0, len = list.length; i < len; i++) {
 		console.log(i, list[i].textContent);
+	}
+	console.log('----------------------------------------');
+	// cheerio
+	var $ = cheerio.load(data);
+	var list = $('a', '.l-footer-ekiten_link');
+	for (var i = 0, len = list.length; i < len; i++) {
+		console.log(i, $(list[i]).text());
 	}
 });

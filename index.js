@@ -5,7 +5,7 @@
 * node index [URL] [*limit] [*rate] [*encoding] [*log path]
 */
 
-const JsDom = require('jsdom').JSDOM;
+const cheerio = require('cheerio');
 const mainloop = require('./src/mainloop');
 const search = require('./src/search');
 const logger = require('./src/logger');
@@ -65,13 +65,14 @@ function onData(__onData) {
 
 function _onEachGet(url, body, links) {
 	if (_onData) {
-		_onData(url, new JsDom(body).window.document);
+		_onData(url, body, cheerio.load(body));
 	}
 	// move on to more links
-	if (links) {
-		for (var i = 0, len = links.length; i < len; i++) {
-			search.get(links[i]);
-		}
+	if (!links) {
+		return;
+	}
+	for (var i = 0, len = links.length; i < len; i++) {
+		search.get(links[i]);
 	}
 }
 
