@@ -13,6 +13,8 @@ const rate = 100;
 const encoding = 'EUC-JP';
 const logpath = process.argv[2] || null;
 
+crawler.addIgnore('?menu=');
+crawler.addIgnore('/map');
 crawler.addIgnore('/history');
 crawler.addIgnore('/user_');
 crawler.addIgnore('/photo');
