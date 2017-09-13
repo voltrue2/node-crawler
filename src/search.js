@@ -36,17 +36,11 @@ module.exports = {
 	getSeen: getSeen,
 	getCollectedUrls: getCollectedUrls,
 	getErrors: getErrors,
-	addIgnore: addIgnore,
-	getIgnores: getIgnores
+	addIgnore: extract.addIgnore,
+	getIgnores: extract.getIgnores,
+	addWhiteList: extract.addWhiteList,
+	getWhiteList: extract.getWhiteList
 };
-
-function addIgnore(urlFragment) {
-	extract.addIgnore(urlFragment);
-}
-
-function getIgnores() {
-	return extract.getIgnores();
-}
 
 function isActive() {
 	return Object.keys(pending).length > 0;

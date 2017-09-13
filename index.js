@@ -42,6 +42,10 @@ function start(startUrl, limit, rate, encoding, logpath) {
 	if (logpath) {
 		logger.setPath(logpath);
 	}
+	var whitelist = search.getWhiteList();
+	for (var j = 0, jen = whitelist.length; j < jen; j++) {
+		logger.write('White Listed URL fragment: ' + whitelist[i]);
+	}
 	var ignores = search.getIgnores();
 	for (var i = 0, len = ignores.length; i < len; i++) {
 		logger.write('Ignored URL fragment: ' + ignores[i]);

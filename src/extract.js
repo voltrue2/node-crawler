@@ -63,10 +63,13 @@ const FILES = [
 	'.js'
 ];
 const ignores = [];
+const whitelist = [];
 
 module.exports = {
 	addIgnore: addIgnore,
+	addWhileList: addWhiteList,
 	getIgnores: getIgnores,
+	getWhiteList: getWhiteList,
 	getLinks: getLinks
 };
 
@@ -74,8 +77,16 @@ function addIgnore(urlFragment) {
 	ignores.push(urlFragment);
 }
 
+function addWhiteList(urlFragment) {
+	whilelist.push(urlFragment);
+}
+
 function getIgnores() {
 	return ignores.concat([]);
+}
+
+function getWhiteList() {
+	return whitelist.concat([]);
 }
 
 function getLinks(_data, protocol, domainName, allowCrossSite) {
@@ -113,7 +124,7 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 		path = _removeHash(path);
 		// handle trailing slash
 		path = _handleTrailingSlash(path);
-		// check ignore
+		// check ignore or whitelist
 		if (_isIgnore(path)) {
 			continue;
 		}
@@ -127,8 +138,24 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 }
 
 function _isIgnore(path) {
+	if (!_isInWhiteList(path)) {
+		return false;
+	}
 	for (var i = 0, len = ignores.length; i < len; i++) {
 		if (path.indexOf(ignores[i]) > -1) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function _isInWhiteList(path) {
+	if (whitelist.length === 0) {
+		// no whitelist
+		return true;
+	}
+	for (var i = 0, len = whitelist.length; i < len; i++) {
+		if (path.indexOf(whilelist[i]) > -1) {
 			return true;
 		}
 	}
