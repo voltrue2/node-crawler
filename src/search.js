@@ -19,7 +19,7 @@ const WLIST = [
 ];
 
 const seen = [];
-const pending = [];
+const pending = {};
 const errors = {};
 
 var encoding = DEFAULT_ENCODING;
@@ -49,7 +49,7 @@ function getIgnores() {
 }
 
 function isActive() {
-	return pending.length > 0;
+	return Object.keys(pending).length > 0;
 }
 
 function getSeenUrls() {
@@ -93,22 +93,22 @@ function get(url) {
 		return;
 	}
 	
-	pending.push(url);
+	pending[url] = true;
 }
 
 function _dispatcher() {
 	var list = [];
-	while (list.length < limit && pending.length) {
-		var url = pending.shift();
-		if (!url) {
-			break;
-		}
+	for (var url in pending) {
 		var hash = _hash(url);
 		if (seen.indexOf(hash) > -1) {
 			continue;
 		}
 		seen.push(hash);
 		list.push(url);
+		delete pending[url];
+		if (list.length === limit) {
+			break;
+		}
 	}
 	async.forEach(list, _dispatch, _onDispatched);
 }
@@ -139,7 +139,7 @@ function _onRequest(error, res, body) {
 
 	logger.write(
 		mark.get(error, res) + '  ' +
-		pending.length + '  ' +
+		Object.keys(pending).length + '  ' +
 		seen.length + '  ' +
 		collected + '  ' +
 		url 

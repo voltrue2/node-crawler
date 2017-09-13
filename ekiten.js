@@ -25,7 +25,6 @@ crawler.addIgnore('/check');
 
 crawler.onData(function (url, dom) {
 	// TODO: parse DOM here...
-	dom = null;
 });
 
 crawler.start(startUrl, limit, rate, encoding, logpath);
