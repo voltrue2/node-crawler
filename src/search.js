@@ -18,10 +18,10 @@ const WLIST = [
 	'.rss'
 ];
 
-const seen = [];
 const pending = {};
 const errors = {};
 
+var seen = 0;
 var encoding = DEFAULT_ENCODING;
 var limit = 1;
 var rate = 100;
@@ -33,7 +33,7 @@ module.exports = {
 	start: start,
 	get: get,
 	isActive: isActive,
-	getSeenUrls: getSeenUrls,
+	getSeen: getSeen,
 	getCollectedUrls: getCollectedUrls,
 	getErrors: getErrors,
 	addIgnore: addIgnore,
@@ -52,8 +52,8 @@ function isActive() {
 	return Object.keys(pending).length > 0;
 }
 
-function getSeenUrls() {
-	return seen.concat([]);
+function getSeen() {
+	return seen;
 }
 
 function getCollectedUrls() {
@@ -86,26 +86,16 @@ function get(url) {
 	if (!anchorUrl) {
 		anchorUrl = url;	
 	}
-
-	var hash = _hash(url);
-	
-	if (seen.indexOf(hash) > -1) {
-		return;
-	}
 	
 	pending[url] = true;
 }
 
 function _dispatcher() {
 	var list = [];
-	for (var url in pending) {
-		var hash = _hash(url);
-		if (seen.indexOf(hash) > -1) {
-			continue;
-		}
-		seen.push(hash);
-		list.push(url);
-		delete pending[url];
+	var keys = Object.keys(pending);
+	for (var i = seen, len = keys.length; i < len; i++) {
+		list.push(keys[i]);
+		seen += 1;
 		if (list.length === limit) {
 			break;
 		}
@@ -140,7 +130,7 @@ function _onRequest(error, res, body) {
 	logger.write(
 		mark.get(error, res) + '  ' +
 		Object.keys(pending).length + '  ' +
-		seen.length + '  ' +
+		seen + '  ' +
 		collected + '  ' +
 		url 
 	);
@@ -189,9 +179,6 @@ function _getLinks(url, body) {
 	var res = [];
 	// remove redundancies
 	for (var i = 0, len = links.length; i < len; i++) {
-		if (seen.indexOf(_hash(links[i])) > -1) {
-			continue;
-		}
 		res.push(links[i]);
 	}
 	return res;
@@ -222,9 +209,5 @@ function _enforceTrailingSlash(url) {
 		url += '/';
 	}
 	return url;
-}
-
-function _hash(url) {
-	return crypto.createHash('md5').update(url).digest('base64');
 }
 

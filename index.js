@@ -20,7 +20,7 @@ process.on('uncaughtException', function (error) {
 process.on('exit', function () {
 	logger.write('[DONE]');
 	logger.write('Time in milliseconds:' + (Date.now() - startTime));
-	logger.write('Searched URLs:' + search.getSeenUrls().length);
+	logger.write('Searched URLs:' + search.getSeen());
 	logger.write('Collected URLs:' + search.getCollectedUrls());
 	logger.write('Errors:' + JSON.stringify(search.getErrors(), null, 2));
 });
