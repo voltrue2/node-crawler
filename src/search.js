@@ -18,7 +18,7 @@ const WLIST = [
 	'.rss'
 ];
 
-const pending = {};
+const pending = [];
 const errors = {};
 
 var seen = 0;
@@ -43,7 +43,7 @@ module.exports = {
 };
 
 function isActive() {
-	return Object.keys(pending).length > 0;
+	return pending.length - seen > 0;
 }
 
 function getSeen() {
@@ -80,15 +80,18 @@ function get(url) {
 	if (!anchorUrl) {
 		anchorUrl = url;	
 	}
+
+	if (pending.indexOf(url) > -1) {
+		return;
+	}
 	
-	pending[url] = true;
+	pending.push(url);
 }
 
 function _dispatcher() {
 	var list = [];
-	var keys = Object.keys(pending);
-	for (var i = seen, len = keys.length; i < len; i++) {
-		list.push(keys[i]);
+	for (var i = seen, len = pending.length; i < len; i++) {
+		list.push(pending[i]);
 		seen += 1;
 		if (list.length === limit) {
 			break;
@@ -123,7 +126,7 @@ function _onRequest(error, res, body) {
 
 	logger.write(
 		mark.get(error, res) + '  ' +
-		Object.keys(pending).length + '  ' +
+		(pending.length - seen) + '  ' +
 		seen + '  ' +
 		collected + '  ' +
 		url 
