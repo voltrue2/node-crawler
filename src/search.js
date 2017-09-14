@@ -26,6 +26,7 @@ var encoding = DEFAULT_ENCODING;
 var limit = 1;
 var rate = 100;
 var anchorUrl;
+var host;
 var _onEachGet;
 var collected = 0;
 
@@ -79,7 +80,16 @@ function get(url) {
 	// never crawls outside of anchorUrl
 	if (!anchorUrl) {
 		anchorUrl = url;	
+		var protocol = anchorUrl.substring(0, anchorUrl.indexOf('://') + 3);
+		var domainName = anchorUrl.replace(protocol, '');
+		if (domainName[domainName.length - 1] === '/') {
+			domainName = domainName.substring(0, domainName.length - 1);
+		}
+		host = protocol + domainName;
+		logger.write('Host: ' + host);
 	}
+
+	url = url.replace(host, '');
 
 	if (pending.indexOf(url) > -1) {
 		return;
@@ -108,7 +118,7 @@ function _dispatch(url, next) {
 	var params = {
 		encoding: null, // we want body as binary
 		followRedirect: true,
-		url: url,
+		url: host + url,
 		method: GET,
 		timeout: TIMEOUT,
 	};
@@ -179,7 +189,11 @@ function _getLinks(url, body) {
 	var res = [];
 	// remove redundancies
 	for (var i = 0, len = links.length; i < len; i++) {
-		res.push(links[i]);
+		// remove host
+		var uri = links[i].replace(host, '');
+		if (res.indexOf(uri) === -1) {
+			res.push(uri);
+		}
 	}
 	return res;
 }
