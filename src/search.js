@@ -1,6 +1,5 @@
 'use strict';
 
-const crypto = require('crypto');
 const request = require('request');
 const iconv = require('iconv-lite');
 const async = require('./async');
@@ -21,6 +20,7 @@ const WLIST = [
 const pending = [];
 const errors = {};
 
+var prevPendingCount = 0;
 var seen = 0;
 var encoding = DEFAULT_ENCODING;
 var limit = 1;
@@ -126,11 +126,14 @@ function _onRequest(error, res, body) {
 
 	logger.write(
 		mark.get(error, res) + '  ' +
-		(pending.length - seen) + '  ' +
-		seen + '  ' +
+		(pending.length - seen) +
+		(prevPendingCount > 0 ? '(' + ((pending.length - seen) - prevPendingCount) + ')' : '(0)') +
+		'  ' + seen + '  ' +
 		collected + '  ' +
 		url 
 	);
+
+	prevPendingCount = pending.length - seen;
 	
 	if (error) {
 		if (!errors[error.message]) {

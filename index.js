@@ -6,7 +6,7 @@
 */
 
 const cheerio = require('cheerio');
-const JsDom = require('jsdom').JSDOM;
+//const JsDom = require('jsdom').JSDOM;
 const mainloop = require('./src/mainloop');
 const search = require('./src/search');
 const logger = require('./src/logger');
@@ -70,12 +70,14 @@ function onData(__onData) {
 
 function _onEachGet(url, body, links) {
 	if (_onData) {
-		//_onData(url, body, cheerio.load(body));
+		_onData(url, body, cheerio.load(body));
+		/*
 		var dom = new JsDom(body);
 		_onData(url, body, dom.window.document);
 		// free memory
 		dom.window.close();
 		dom = null;
+		*/
 	}
 	// move on to more links
 	if (!links) {

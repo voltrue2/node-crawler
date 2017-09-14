@@ -8,7 +8,7 @@
 const crawler = require('./');
 
 const startUrl = 'http://www.nhk.or.jp/';
-const limit = 100;
+const limit = 2;
 const rate = 100;
 const encoding = 'UTF-8';
 const logpath = process.argv[2] || null;
