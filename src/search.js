@@ -119,18 +119,19 @@ function _onDispatched() {
 
 function _dispatch(url, next) {
 	
-	url = compress.revert(url);
+	var reverted = compress.revert(url);
 	
 	var params = {
 		encoding: null, // we want body as binary
 		followRedirect: true,
-		url: host + url,
+		url: host + reverted,
 		method: GET,
 		timeout: TIMEOUT,
 	};
 	request(params, _onRequest.bind({
 		encoding: encoding,
-		url: url,
+		url: reverted,
+		compressed: url !== reverted,
 		next: next
 	}));
 }
@@ -138,6 +139,7 @@ function _dispatch(url, next) {
 function _onRequest(error, res, body) {
 	var encoding = this.encoding;
 	var url = this.url;
+	var compressed = this.compressed;
 	var next = this.next;
 
 	var current = pending.length - seen;
@@ -147,8 +149,8 @@ function _onRequest(error, res, body) {
 		(prevPendingCount > 0 ? '(' + (current - prevPendingCount) + ')' : '(0)') +
 		'  ' + seen + '  ' +
 		collected + '  ' +
-		url + '  ' +
-		compress.ratio()
+		compress.ratio() + '  ' +
+		url + '  ' + (compressed ? 'yes' : 'no')
 	);
 
 	prevPendingCount = current;
