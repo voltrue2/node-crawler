@@ -8,6 +8,7 @@ const compress = require('./compress');
 const logger = require('./logger');
 const mark = require('./mark');
 
+const TAB = '\t';
 const DEFAULT_ENCODING = 'UTF-8';
 const GET = 'get';
 const TIMEOUT = 30000;
@@ -143,14 +144,15 @@ function _onRequest(error, res, body) {
 	var next = this.next;
 
 	var current = pending.length - seen;
+	var delta = prevPendingCount > 0 ? '(' + (current - prevPendingCount) + ')' : '(0)';
 	logger.write(
-		mark.get(error, res) + '  ' +
-		current +
-		(prevPendingCount > 0 ? '(' + (current - prevPendingCount) + ')' : '(0)') +
-		'  ' + seen + '  ' +
-		collected + '  ' +
-		compress.ratio() + '  ' +
-		url + '  ' + (compressed ? 'yes' : 'no')
+		mark.get(error, res) + TAB +
+		current + TAB + delta +
+		TAB + seen + TAB +
+		collected + TAB +
+		compress.ratio() + TAB +
+		(compressed ? 'yes' : 'no') + TAB +
+		url
 	);
 
 	prevPendingCount = current;
