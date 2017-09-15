@@ -70,14 +70,7 @@ function onData(__onData) {
 
 function _onEachGet(url, body, links) {
 	if (_onData) {
-		_onData(url, body, cheerio.load(body));
-		/*
-		var dom = new JsDom(body);
-		_onData(url, body, dom.window.document);
-		// free memory
-		dom.window.close();
-		dom = null;
-		*/
+		_onData(url, body, cheerio.load);
 	}
 	// move on to more links
 	if (!links) {
