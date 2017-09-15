@@ -14,6 +14,7 @@ const encoding = 'EUC-JP';
 const logpath = process.argv[2] || null;
 
 crawler.addIgnore('?menu=');
+crawler.addIgnore('/mypage');
 crawler.addIgnore('/map');
 crawler.addIgnore('/history');
 crawler.addIgnore('/user_');

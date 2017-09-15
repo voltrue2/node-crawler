@@ -4,6 +4,7 @@ const request = require('request');
 const iconv = require('iconv-lite');
 const async = require('./async');
 const extract = require('./extract');
+const compress = require('./compress');
 const logger = require('./logger');
 const mark = require('./mark');
 
@@ -91,6 +92,8 @@ function get(url) {
 
 	url = url.replace(host, '');
 
+	url = compress.convert(url);
+
 	if (pending.indexOf(url) > -1) {
 		return;
 	}
@@ -115,6 +118,9 @@ function _onDispatched() {
 }
 
 function _dispatch(url, next) {
+	
+	url = compress.revert(url);
+	
 	var params = {
 		encoding: null, // we want body as binary
 		followRedirect: true,
@@ -134,16 +140,18 @@ function _onRequest(error, res, body) {
 	var url = this.url;
 	var next = this.next;
 
+	var current = pending.length - seen;
 	logger.write(
 		mark.get(error, res) + '  ' +
-		(pending.length - seen) +
-		(prevPendingCount > 0 ? '(' + ((pending.length - seen) - prevPendingCount) + ')' : '(0)') +
+		current +
+		(prevPendingCount > 0 ? '(' + (current - prevPendingCount) + ')' : '(0)') +
 		'  ' + seen + '  ' +
 		collected + '  ' +
-		url 
+		url + '  ' +
+		compress.ratio()
 	);
 
-	prevPendingCount = pending.length - seen;
+	prevPendingCount = current;
 	
 	if (error) {
 		if (!errors[error.message]) {
