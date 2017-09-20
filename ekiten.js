@@ -24,8 +24,8 @@ crawler.addIgnore('.xml');
 crawler.addIgnore('/charge');
 crawler.addIgnore('/check');
 
-crawler.onData(function (url, dom) {
-	// TODO: parse DOM here...
+crawler.onData(function (url, body, loader) {
+	// TODO: parse $ = loader(body) here...
 });
 
 crawler.start(startUrl, limit, rate, encoding, logpath);

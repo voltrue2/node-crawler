@@ -146,7 +146,7 @@ function _onRequest(error, res, body) {
 	var current = pending.length - seen;
 	var delta = prevPendingCount > 0 ? '(' + (current - prevPendingCount) + ')' : '(0)';
 	logger.write(
-		mark.get(error, res) + TAB +
+		mark.get(error, res) + ' ' +
 		current + TAB + delta +
 		TAB + seen + TAB +
 		collected + TAB +
