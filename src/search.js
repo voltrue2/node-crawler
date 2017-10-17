@@ -35,6 +35,7 @@ var collected = 0;
 module.exports = {
 	start: start,
 	get: get,
+	getHost: getHost,
 	isActive: isActive,
 	getSeen: getSeen,
 	getCollectedUrls: getCollectedUrls,
@@ -47,6 +48,10 @@ module.exports = {
 
 function isActive() {
 	return pending.length - seen > 0;
+}
+
+function getHost() {
+	return host;
 }
 
 function getSeen() {
@@ -84,8 +89,9 @@ function get(url) {
 		anchorUrl = url;	
 		var protocol = anchorUrl.substring(0, anchorUrl.indexOf('://') + 3);
 		var domainName = anchorUrl.replace(protocol, '');
-		if (domainName[domainName.length - 1] === '/') {
-			domainName = domainName.substring(0, domainName.length - 1);
+		var index = domainName.indexOf('/');
+		if (index !== -1) {
+			domainName = domainName.substring(0, index);
 		}
 		host = protocol + domainName;
 		logger.write('Host: ' + host);
@@ -129,6 +135,7 @@ function _dispatch(url, next) {
 		method: GET,
 		timeout: TIMEOUT,
 	};
+
 	request(params, _onRequest.bind({
 		encoding: encoding,
 		url: reverted,
@@ -184,6 +191,7 @@ function _onRequest(error, res, body) {
 	} else {
 		body = body.toString();
 	}
+
 	var links = _getLinks(url, body);
 	collected += 1;
 	_onEachGet(url, body, links);

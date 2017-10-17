@@ -125,7 +125,7 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 		// handle trailing slash
 		path = _handleTrailingSlash(path);
 		// check ignore or whitelist
-		if (_isIgnore(path)) {
+		if (_isIgnored(path)) {
 			continue;
 		}
 		// ignore duplicates
@@ -137,7 +137,7 @@ function getLinks(_data, protocol, domainName, allowCrossSite) {
 	return res;
 }
 
-function _isIgnore(path) {
+function _isIgnored(path) {
 	if (!_isInWhiteList(path)) {
 		return false;
 	}

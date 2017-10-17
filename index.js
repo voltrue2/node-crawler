@@ -30,7 +30,8 @@ var _onData;
 module.exports = {
 	onData: onData,
 	addIgnore: addIgnore,
-	start: start
+	start: start,
+	getHost: search.getHost
 };
 
 function addIgnore(path) {
@@ -58,6 +59,7 @@ function start(startUrl, limit, rate, encoding, logpath) {
 		rate: parseInt(rate),
 		encoding: encoding
 	}, _onEachGet);
+	// add the URL link to the pending list
 	search.get(startUrl);
 }
 
@@ -69,13 +71,19 @@ function onData(__onData) {
 }
 
 function _onEachGet(url, body, links) {
+	var useful = true;
 	if (_onData) {
-		_onData(url, body, cheerio.load);
+		useful = _onData(url, body, cheerio.load);
+	}
+	if (!useful) {
+		// we do not need this page nor the links on this page
+		return;
 	}
 	// move on to more links
 	if (!links) {
 		return;
 	}
+	// add the URL links on the page to the pending list
 	for (var i = 0, len = links.length; i < len; i++) {
 		search.get(links[i]);
 	}
