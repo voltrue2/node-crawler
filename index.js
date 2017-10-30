@@ -51,6 +51,7 @@ function start(startUrl, limit, rate, encoding, logpath) {
 	for (var i = 0, len = ignores.length; i < len; i++) {
 		logger.write('Ignored URL fragment: ' + ignores[i]);
 	}
+
 	// start main loop
 	mainloop.start();
 	// start crawling
@@ -73,7 +74,17 @@ function onData(__onData) {
 function _onEachGet(url, body, links) {
 	var useful = true;
 	if (_onData) {
-		useful = _onData(url, body, cheerio.load);
+		useful = _onData(url, body, cheerio.load, function () {
+			// we do not need this page nor the links on this page
+			if (!useful) {
+				return;
+			}
+			// add the URL links on the page to the pending list
+			for (var i = 0, len = links.length; i < len; i++) {
+				search.get(links[i]);
+			}
+		});
+		return;
 	}
 	if (!useful) {
 		// we do not need this page nor the links on this page
