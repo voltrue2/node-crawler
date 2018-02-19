@@ -1,12 +1,12 @@
 {
-	"name": "node-crawler",
-	"description": "Web crawler written in javascript",
-	"author": "Nobuyori Takahashi",
-	"version": "0.0.1",
-	"dependencies": {
-		"request": "2.81.0",
-		"iconv-lite": "0.4.18",
-		"jsdom": "11.2.0",
-		"cheerio": "1.0.0-rc.2"
-	}
+  "name": "node-crawler",
+  "description": "Web crawler written in javascript",
+  "author": "Nobuyori Takahashi",
+  "version": "0.0.1",
+  "dependencies": {
+    "request": "2.82.0",
+    "iconv-lite": "0.4.18",
+    "jsdom": "11.2.0",
+    "cheerio": "1.0.0-rc.2"
+  }
 }
